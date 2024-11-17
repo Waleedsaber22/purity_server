@@ -47,8 +47,15 @@ class Surah {
   }
   static async getAyah(req, res) {
     const { id } = req.params || {};
+    const { reciter } = req.query || {};
     const surahUrl1 = `${process.env.QURAN_API}/chapters/${id}`;
     const data = (await axios.get(surahUrl1)).data;
+    const audioDataUrl = `${process.env.QURAN_API}/audio/reciters/${
+      reciter || 4
+    }/audio_files?chapter=${id}&segments=true`;
+    const audioData = (await axios.get(audioDataUrl)).data;
+
+    const audioFile = audioData.audio_files[0];
     const surahDetails = data.chapter;
     const surahUrl = `${process.env.QURAN_API}/verses/by_chapter/${id}?words=true&mushaf=2&word_fields=code_v1&page=1`;
     const surahDataTotal = (await axios.get(surahUrl)).data;
@@ -62,14 +69,25 @@ class Surah {
       surData.unshift(surahData?.verses);
       currentPage++;
     }
-    res.send({ ...surahDetails, data: surData });
+    res.send({
+      ...surahDetails,
+      data: surData,
+      verseTimings: audioFile.verse_timings,
+    });
   }
   static async getByPage(req, res) {
     const { id } = req.params || {};
+    const { reciter } = req.query || {};
     const surahUrl = `${process.env.QURAN_API}/chapters/${id}`;
     const data = (await axios.get(surahUrl)).data;
     const surahDetails = data.chapter;
     const [from, to] = surahDetails.pages;
+    const audioDataUrl = `${process.env.QURAN_API}/audio/reciters/${
+      reciter || 4
+    }/audio_files?chapter=${id}&segments=true`;
+    const audioData = (await axios.get(audioDataUrl)).data;
+
+    const audioFile = audioData.audio_files[0];
     const surData = await Promise.all(
       Array.from({ length: to - from + 1 })
         .map((_, i) => to - i)
@@ -79,7 +97,11 @@ class Surah {
           return surahDataTotal.verses;
         })
     );
-    res.send({ ...surahDetails, data: surData });
+    res.send({
+      ...surahDetails,
+      verseTimings: audioFile.verse_timings,
+      data: surData,
+    });
   }
 }
 
