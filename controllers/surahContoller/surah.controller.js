@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const Global = require("../../handlers/globalHandler/global.handler");
 const File = require("../../handlers/fileHandler/file.handler");
+const Pagination = require("../../middlewares/pagination.middleware");
 class Surah {
   static async getLearningPlans(req, res) {
     try {
@@ -77,7 +78,9 @@ class Surah {
   }
   static async getByPage(req, res) {
     const { id } = req.params || {};
-    const { reciter } = req.query || {};
+    let { reciter, page = 1, isMidOffset } = req.query || {};
+    page = Number(page);
+    const { limit } = req.pagination || {};
     const surahUrl = `${process.env.QURAN_API}/chapters/${id}`;
     const data = (await axios.get(surahUrl)).data;
     const surahDetails = data.chapter;
@@ -90,15 +93,29 @@ class Surah {
     const audioFile = audioData.audio_files[0];
     const surData = await Promise.all(
       Array.from({ length: to - from + 1 })
-        .map((_, i) => to - i)
-        .map(async (p) => {
-          const surahUrl = `${process.env.QURAN_API}/verses/by_page/${p}?words=true&mushaf=2&word_fields=code_v1,text_uthmani&per_page=all&from=${id}:1&to=${id}:${surahDetails?.verses_count}`;
-          const surahDataTotal = (await axios.get(surahUrl)).data;
-          return surahDataTotal.verses;
+        .map((_, i) => from + i)
+        .map(async (currentPage) => {
+          const offset = page + from - 1;
+          if (
+            !limit ||
+            Pagination.isInRange({ offset, from, to, isMidOffset }, currentPage)
+          ) {
+            const surahUrl = `${process.env.QURAN_API}/verses/by_page/${currentPage}?words=true&mushaf=2&word_fields=code_v1,text_uthmani&per_page=all&from=${id}:1&to=${id}:${surahDetails?.verses_count}`;
+            const surahDataTotal = (await axios.get(surahUrl)).data;
+            return surahDataTotal.verses;
+          }
+          return null;
         })
     );
     res.send({
       ...surahDetails,
+      nextOffset: Pagination.getNextOffset(
+        {
+          to: to - from + 1,
+          isMidOffset,
+        },
+        page
+      ),
       verseTimings: audioFile.verse_timings,
       data: surData,
     });

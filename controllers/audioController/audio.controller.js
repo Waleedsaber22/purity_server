@@ -10,21 +10,25 @@ class Audio extends GlobalApi {
   static async getAudioFile(req, res) {
     const { surah } = req.params || {};
     const { reciter = "4" } = req.query || {};
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "data",
-      "audios",
-      reciter,
-      `${surah}.mp3`
-    );
+    // const filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "..",
+    //   "data",
+    //   "audios",
+    //   reciter,
+    //   `${surah}.mp3`
+    // );
     const range = req.headers.range;
-    try {
-      fs.statSync(filePath);
-      return res.sendFile(filePath);
-    } catch (err) {
-      console.error(err);
+    // try {
+    //   fs.statSync(filePath);
+    //   return res.sendFile(filePath);
+    // } catch (err) {
+    //   console.error(err);
+    // }
+    if (!reciter || isNaN(Number(reciter))) {
+      res.status(404);
+      return res.send("not_found");
     }
     const audioDataUrl = `${process.env.QURAN_API}/audio/reciters/${reciter}/audio_files?chapter=${surah}&segments=true`;
     const audioData = (await axios.get(audioDataUrl)).data;

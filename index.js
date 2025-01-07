@@ -10,7 +10,6 @@ const { initRoutes } = require("./routes");
 const app = express();
 const sequelize = require("./db");
 const ErrorHandler = require("./handlers/errorHandler/error.handler");
-
 app
   .use(
     cors({
@@ -18,7 +17,8 @@ app
       credentials: true,
     })
   )
-  .use(ErrorHandler.catchGlobalErrors);
+  .use(ErrorHandler.catchGlobalErrors)
+  .use(express.static("public"));
 app.set("port", process.env.PORT || 5000);
 app.listen(app.get("port"), async () => {
   try {

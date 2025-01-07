@@ -1,10 +1,10 @@
-require("dotenv").config()
+require("dotenv").config();
 
-const config={
-    database:"QuranPurity",
-    dialect:"postgres",
-    username:"postgres",
-    database:"postgres",
-    password:"wal23"
-}
-module.exports=config
+const config = {
+  database: "QuranPurity",
+  dialect: "postgres",
+  username: "postgres",
+  database: "postgres",
+  password: "myPassword",
+};
+module.exports = config;
