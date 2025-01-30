@@ -1,8 +1,8 @@
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
-const Global = require("../../handlers/globalHandler/global.handler");
-const File = require("../../handlers/fileHandler/file.handler");
+const Global = require("../../lib/handlers/globalHandler/global.handler");
+const File = require("../../lib/handlers/fileHandler/file.handler");
 const Pagination = require("../../middlewares/pagination.middleware");
 class Surah {
   static async getLearningPlans(req, res) {
@@ -48,15 +48,8 @@ class Surah {
   }
   static async getAyah(req, res) {
     const { id } = req.params || {};
-    const { reciter } = req.query || {};
     const surahUrl1 = `${process.env.QURAN_API}/chapters/${id}`;
     const data = (await axios.get(surahUrl1)).data;
-    const audioDataUrl = `${process.env.QURAN_API}/audio/reciters/${
-      reciter || 4
-    }/audio_files?chapter=${id}&segments=true`;
-    const audioData = (await axios.get(audioDataUrl)).data;
-
-    const audioFile = audioData.audio_files[0];
     const surahDetails = data.chapter;
     const surahUrl = `${process.env.QURAN_API}/verses/by_chapter/${id}?words=true&mushaf=2&word_fields=code_v1&page=1`;
     const surahDataTotal = (await axios.get(surahUrl)).data;
@@ -73,7 +66,6 @@ class Surah {
     res.send({
       ...surahDetails,
       data: surData,
-      verseTimings: audioFile.verse_timings,
     });
   }
   static async getByPage(req, res) {
@@ -85,12 +77,6 @@ class Surah {
     const data = (await axios.get(surahUrl)).data;
     const surahDetails = data.chapter;
     const [from, to] = surahDetails.pages;
-    const audioDataUrl = `${process.env.QURAN_API}/audio/reciters/${
-      reciter || 4
-    }/audio_files?chapter=${id}&segments=true`;
-    const audioData = (await axios.get(audioDataUrl)).data;
-
-    const audioFile = audioData.audio_files[0];
     const surData = await Promise.all(
       Array.from({ length: to - from + 1 })
         .map((_, i) => from + i)
@@ -102,7 +88,17 @@ class Surah {
           ) {
             const surahUrl = `${process.env.QURAN_API}/verses/by_page/${currentPage}?words=true&mushaf=2&word_fields=code_v1,text_uthmani&per_page=all&from=${id}:1&to=${id}:${surahDetails?.verses_count}`;
             const surahDataTotal = (await axios.get(surahUrl)).data;
-            return surahDataTotal.verses;
+            return surahDataTotal.verses?.map((ayah) => {
+              ayah.verseKey = ayah.verse_key;
+              ayah.ayahNumber = ayah.verse_number;
+              ayah?.words?.forEach((word) => {
+                word.verseKey = ayah.verseKey;
+                return word;
+              });
+              delete ayah.verse_key;
+              delete ayah.verse_number;
+              return ayah;
+            });
           }
           return null;
         })
@@ -116,7 +112,6 @@ class Surah {
         },
         page
       ),
-      verseTimings: audioFile.verse_timings,
       data: surData,
     });
   }

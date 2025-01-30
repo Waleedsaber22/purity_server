@@ -1,5 +1,5 @@
 class Pagination {
-  static limit = 7;
+  static limit = 5;
 
   static init(req) {
     if (!req.pagination) req.pagination = {};
