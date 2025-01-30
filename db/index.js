@@ -4,55 +4,50 @@ const fs = require("fs");
 const config = require("./config");
 require("dotenv").config();
 
-const sequelize = new Sequelize(
-  {
-    ...config,
-    logging: console.log,
-    ssl:
-      process.env.NODE_ENV == "production"
-        ? { ca: fs.readFileSync(__dirname + "/ca.pem") }
-        : null,
-    host: process.env.DATABASE_HOST,
-    dialect: "postgres",
-    charset: "utf8mb4",
-    collate: "utf8mb4_unicode_ci",
-    port: process.env.DATABASE_PORT,
-    operatorsAliases: {
-      $gt: Op.gt, // Greater Than
-      $gte: Op.gte, // Greater Than or Equal
-      $lt: Op.lt, // Less Than
-      $lte: Op.lte, // Less Than or Equal
-      $between: Op.between, // Between
-      $not: Op.not,
-      $is: Op.is,
-      $or: Op.or,
-      $and: Op.and,
-      $ne: Op.ne,
-      $eq: Op.eq,
-      $col: Op.col,
-      $notBetween: Op.notBetween,
-      $all: Op.all,
-      $in: Op.in,
-      $notIn: Op.notIn,
-      $like: Op.like,
-      $iLike: Op.iLike, // Not Working With SqlServer Database
-      $notLike: Op.notLike,
-      $notILike: Op.notILike, // Not Working With SqlServer Database
-      $startsWith: Op.startsWith,
-      $endsWith: Op.endsWith,
-      $includes: Op.substring,
-      $substring: Op.substring,
-      $regexp: Op.regexp, // Not Working With SqlServer Database
-      $notRegexp: Op.notRegexp, // Not Working With SqlServer Database
-      $iRegexp: Op.iRegexp, // Not Working With SqlServer Database
-      $notIRegexp: Op.notIRegexp, // Not Working With SqlServer Database
-      $any: Op.any,
-    },
-    dialectOptions: {
-      multipleStatements: true,
-    },
-  }
-);
+const sequelize = new Sequelize({
+  ...config,
+  logging: console.log,
+  ssl: null,
+  host: process.env.DATABASE_HOST,
+  dialect: "postgres",
+  charset: "utf8mb4",
+  collate: "utf8mb4_unicode_ci",
+  port: process.env.DATABASE_PORT,
+  operatorsAliases: {
+    $gt: Op.gt, // Greater Than
+    $gte: Op.gte, // Greater Than or Equal
+    $lt: Op.lt, // Less Than
+    $lte: Op.lte, // Less Than or Equal
+    $between: Op.between, // Between
+    $not: Op.not,
+    $is: Op.is,
+    $or: Op.or,
+    $and: Op.and,
+    $ne: Op.ne,
+    $eq: Op.eq,
+    $col: Op.col,
+    $notBetween: Op.notBetween,
+    $all: Op.all,
+    $in: Op.in,
+    $notIn: Op.notIn,
+    $like: Op.like,
+    $iLike: Op.iLike, // Not Working With SqlServer Database
+    $notLike: Op.notLike,
+    $notILike: Op.notILike, // Not Working With SqlServer Database
+    $startsWith: Op.startsWith,
+    $endsWith: Op.endsWith,
+    $includes: Op.substring,
+    $substring: Op.substring,
+    $regexp: Op.regexp, // Not Working With SqlServer Database
+    $notRegexp: Op.notRegexp, // Not Working With SqlServer Database
+    $iRegexp: Op.iRegexp, // Not Working With SqlServer Database
+    $notIRegexp: Op.notIRegexp, // Not Working With SqlServer Database
+    $any: Op.any,
+  },
+  dialectOptions: {
+    multipleStatements: true,
+  },
+});
 const models = sequelize.models;
 const connect = async () => {
   try {
