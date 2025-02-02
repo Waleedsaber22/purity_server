@@ -13,7 +13,9 @@ class Audio extends GlobalController {
       // surahID
       //   ? `${process.env.QURAN_API_V4}/recitations/${reciter}/by_ayah/${surahID}:${id}?fields=segments`
       //   :
-      `${process.env.QURAN_API}/audio/reciters/${reciter}/audio_files?chapter=${id}&segments=true`;
+      `${process.env.QURAN_API}/audio/reciters/${reciter}/audio_files?chapter=${
+        surahID || id
+      }&segments=true`;
     const audioData = (await axios.get(audioDataUrl)).data;
 
     const audioFile = audioData.audio_files[0];
@@ -23,6 +25,15 @@ class Audio extends GlobalController {
       verseTimings = verseTimings.filter(
         (verse) => verse?.verse_key === verseKey
       );
+      const timeOffset = verseTimings[0].timestamp_from;
+      verseTimings[0].timestamp_from -= timeOffset;
+      verseTimings[0].timestamp_to -= timeOffset;
+      verseTimings[0].segments.forEach((seg) => {
+        seg[1] -= timeOffset;
+        seg[2] -= timeOffset;
+
+        return seg;
+      });
     }
     return res.send(verseTimings);
   }
